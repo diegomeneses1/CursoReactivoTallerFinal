@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.model.User;
 import com.example.service.interfaces.IUserService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -15,6 +16,11 @@ public class UserController {
         this.userService = userService;
     }
 
+    @PostMapping
+    public Mono<User> createUser(@Valid @RequestBody User user) {
+        return userService.save(user);
+    }
+
     @GetMapping
     public Flux<User> getAllUsers() {
         return userService.findAll();
@@ -23,11 +29,6 @@ public class UserController {
     @GetMapping("/{id}")
     public Mono<User> getUserById(@PathVariable String id) {
         return userService.findById(id);
-    }
-
-    @PostMapping
-    public Mono<User> createUser(@RequestBody User user) {
-        return userService.save(user);
     }
 
     @PutMapping("/{id}/balance")

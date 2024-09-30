@@ -22,9 +22,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-json'
-
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    //testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo'
     testImplementation 'io.projectreactor:reactor-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 

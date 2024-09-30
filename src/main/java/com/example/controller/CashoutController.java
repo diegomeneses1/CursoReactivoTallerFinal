@@ -17,6 +17,11 @@ public class CashoutController {
         this.cashoutService = cashoutService;
     }
 
+    @PostMapping
+    public Mono<Cashout> createCashout(@RequestBody Cashout cashout) {
+        return cashoutService.save(cashout);
+    }
+
     @GetMapping
     public Flux<Cashout> getAllCashout() {
         return cashoutService.findAll();
@@ -30,12 +35,6 @@ public class CashoutController {
     @GetMapping("/user/{userId}")
     public Flux<Cashout> getCashoutByuserId(@PathVariable String userId) {
         return cashoutService.findByUserid(userId);
-    }
-
-
-    @PostMapping
-    public Mono<Cashout> createCashout(@RequestBody Cashout cashout) {
-        return cashoutService.save(cashout);
     }
 
     /*

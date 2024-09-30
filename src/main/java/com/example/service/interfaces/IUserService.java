@@ -12,4 +12,6 @@ public interface IUserService {
     Mono<User> save(User user);
 
     Mono<Void> deleteById(String id);
+
+    Mono<User> updateBalance(User user);
 }

@@ -1,5 +1,7 @@
 package com.example.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -7,7 +9,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class User {
     @Id
     private String id;
+    @NotBlank(message = "The name is required")
     private String name;
+    @Positive(message = "The balance must be positive")
     private Double balance;
 
     public String getName() {

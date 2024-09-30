@@ -1,7 +1,7 @@
 package com.example.config;
 
-import com.example.exception.Error400Exception;
-import com.example.service.interfaces.IPaymentRestPay;
+import com.example.exception.NotValidException;
+import com.example.service.interfaces.IPaymentRestClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatusCode;
@@ -21,7 +21,7 @@ public class WebClientConfig {
         return builder.baseUrl("http://localhost:8080")
                 .defaultStatusHandler(HttpStatusCode::is4xxClientError, clientResponse -> {
                     return clientResponse.bodyToMono(String.class)
-                            .flatMap(error -> Mono.error(new Error400Exception(error)));
+                            .flatMap(error -> Mono.error(new NotValidException(error)));
                 })
                 .defaultStatusHandler(HttpStatusCode::is5xxServerError, clientResponse -> {
                     return clientResponse.bodyToMono(String.class)
@@ -32,11 +32,11 @@ public class WebClientConfig {
     }
 
     @Bean
-    public IPaymentRestPay createIPaymentRestPay(WebClient webClient){
+    public IPaymentRestClient createIPaymentRestPay(WebClient webClient){
         HttpServiceProxyFactory factory = HttpServiceProxyFactory
                     .builderFor(WebClientAdapter.create(webClient))
                 .build();
-        return factory.createClient(IPaymentRestPay.class);
+        return factory.createClient(IPaymentRestClient.class);
     }
 
 

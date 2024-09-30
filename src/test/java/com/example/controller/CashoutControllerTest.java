@@ -1,10 +1,14 @@
 package com.example.controller;
 
 import com.example.controller.handler.GlobalHandleError;
-import com.example.exception.UserNoFoundException;
+import com.example.exception.NotFoundException;
 import com.example.model.Cashout;
-import com.example.service.interfaces.ICashoutService;
+import com.example.model.User;
+import com.example.service.CashoutService;
+import com.example.service.UserService;
+import com.example.service.interfaces.IPaymentRestClient;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -14,67 +18,93 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-
-@ContextConfiguration(classes = {CashoutControllerTest.class, GlobalHandleError.class})
+@ContextConfiguration(classes = {CashoutController.class, GlobalHandleError.class})
 @WebFluxTest(CashoutControllerTest.class)
+
 class CashoutControllerTest {
 
     @Autowired
     WebTestClient webTestClient;
 
     @MockBean
-    ICashoutService cashoutService;
+    CashoutService cashoutService;
+
+    @MockBean
+    UserService userService;
+
+    @MockBean
+    IPaymentRestClient restClient;
 
     @Test
-    void crear() {
-        /*
-        var userInput = new User();
-        userInput.setName("Test Doe");
-        userInput.setBalance(50.0);
+    void createCashout_happy_path() {
+        User user = new User();
+        user.setId("1");
+        user.setName("Albert Test");
+        user.setBalance(100.0);
 
-        var userOutput = new User();
-        userOutput.setId("123");
-        userOutput.setName("Test Doe");
-        userOutput.setBalance(50.0);
+        Cashout cashout = new Cashout();
+        cashout.setUserId("1");
+        cashout.setAmount(50.0);
 
-        Mockito.when(userService.save(any(User.class))).thenReturn(Mono.just(userOutput));
+
+        Mockito.when(userService.findById(Mockito.anyString())).thenReturn(Mono.just(user));
+        Mockito.when(cashoutService.save(ArgumentMatchers.any(Cashout.class))).thenReturn(Mono.just(cashout));
+        Mockito.when(restClient.validatePayment(Mockito.anyString())).thenReturn(Mono.just("El pago no puede continuar"));
 
         webTestClient
                 .post()
-                .uri("/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(userInput)
+                .uri("/cashout")
+                .bodyValue(cashout)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(User.class)
-                .returnResult()
-                .getResponseBody();*/
-
+                .expectBody()
+                .jsonPath("$.userId").isEqualTo("1")
+                .jsonPath("$.amount").isEqualTo(50.0);
     }
 
-
     @Test
-    void obtenerPorCashoutId() {
+    void createCashout_client_not_found() {
+        User user = new User();
+        user.setId("1");
+        user.setName("Albert Test");
+        user.setBalance(100.0);
+
+        Cashout cashout = new Cashout();
+        cashout.setUserId("1");
+        cashout.setAmount(50.0);
+
+        Mockito.when(userService.findById(Mockito.anyString())).thenReturn(Mono.error(new NotFoundException("Usuario no encotrado")));
+        webTestClient
+                .post()
+                .uri("/cashouts")
+                .bodyValue(cashout)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class);
+
+    }
+    @Test
+    void obtenerPorId() {
         var cashoutOutput = new Cashout();
-        cashoutOutput.setId("123");
-        cashoutOutput.setUserId("1");
+        cashoutOutput.setId("1");
+        cashoutOutput.setUserId("123");
         cashoutOutput.setAmount(50.0);
 
-        Mockito.when(cashoutService.findById("")).thenReturn(Mono.just(cashoutOutput));
+        Mockito.when(cashoutService.findById(Mockito.anyString())).thenReturn(Mono.just(cashoutOutput));
 
         webTestClient.get()
-                .uri("/cashout/{id}", "")
+                .uri("/cashout/{id}", "123")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody();
-                //.jsonPath("$.name").isEqualTo("Test Doe")
-                //.jsonPath("$.balance").isEqualTo(50.0);
+                .expectBody()
+                .jsonPath("$.userId").isEqualTo("123")
+                .jsonPath("$.amount").isEqualTo(50.0);
     }
 
     @Test
     void obtenerPorId_sadPath() {
-
-        Mockito.when(cashoutService.findById("123")).thenReturn(Mono.error(new UserNoFoundException("CashOut no encotrado")));
+        Mockito.when(cashoutService.findById("123"))
+                .thenReturn(Mono.error(new NotFoundException("CashOut no encontrado")));
 
         webTestClient.get()
                 .uri("/cashout/{id}", "123")
@@ -86,19 +116,19 @@ class CashoutControllerTest {
     void obtenerTodos() {
 
         var cashoutOutput = new Cashout();
-        cashoutOutput.setId("123");
-        cashoutOutput.setUserId("1");
+        cashoutOutput.setId("1");
+        cashoutOutput.setUserId("123");
         cashoutOutput.setAmount(50.0);
         Mockito.when(cashoutService.findAll()).thenReturn(Flux.just(cashoutOutput));
 
 
         webTestClient.get()
-                .uri("/users")
+                .uri("/cashout")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody();
-                //.jsonPath("$[0].nombre").isEqualTo("Raul")
-                //.jsonPath("$[0].email").isEqualTo("raul@gmail.com");
+                .expectBody()
+                .jsonPath("$[0].userId").isEqualTo("123")
+                .jsonPath("$[0].amount").isEqualTo(50.0);
     }
 
 

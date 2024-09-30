@@ -1,7 +1,7 @@
 package com.example.controller;
 
 import com.example.controller.handler.GlobalHandleError;
-import com.example.exception.UserNoFoundException;
+import com.example.exception.NotFoundException;
 import com.example.model.User;
 import com.example.service.interfaces.IUserService;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class UserControllerTest {
     IUserService userService;
 
     @Test
-    void crear() {
+    void crear_usuario_happy_path() {
         var userInput = new User();
         userInput.setName("Test Doe");
         userInput.setBalance(50.0);
@@ -53,7 +53,6 @@ class UserControllerTest {
 
     }
 
-
     @Test
     void obtenerPorId() {
         var userOutput = new User();
@@ -61,26 +60,27 @@ class UserControllerTest {
         userOutput.setName("Test Doe");
         userOutput.setBalance(50.0);
 
-        Mockito.when(userService.findById("123")).thenReturn(Mono.just(userOutput));
+        Mockito.when(userService.findById(Mockito.anyString())).thenReturn(Mono.just(userOutput));
 
         webTestClient.get()
-                .uri("/users/{id}", 1L)
+                .uri("/users/{id}", "123")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody();
-                //.jsonPath("$.name").isEqualTo("Test Doe")
-                //.jsonPath("$.balance").isEqualTo(50.0);
+                .expectBody()
+                .jsonPath("$.name").isEqualTo("Test Doe")
+                .jsonPath("$.balance").isEqualTo(50.0);
     }
 
     @Test
     void obtenerPorId_sadPath() {
 
-        Mockito.when(userService.findById("123")).thenReturn(Mono.error(new UserNoFoundException("Usuario no encotrado")));
+        Mockito.when(userService.findById(Mockito.anyString())).thenReturn(Mono.error(new NotFoundException("Usuario no encotrado")));
 
         webTestClient.get()
                 .uri("/users/{id}", "123")
                 .exchange()
-                .expectStatus().isNotFound();
+                .expectStatus().isNotFound()
+                .expectBody(String.class);
     }
 
     @Test
@@ -97,9 +97,9 @@ class UserControllerTest {
                 .uri("/users")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody();
-                //.jsonPath("$[0].nombre").isEqualTo("Raul")
-                //.jsonPath("$[0].email").isEqualTo("raul@gmail.com");
+                .expectBody()
+                .jsonPath("$[0].name").isEqualTo("Test Doe")
+                .jsonPath("$[0].balance").isEqualTo("50.0");
     }
 
 
